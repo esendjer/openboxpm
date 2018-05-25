@@ -10,3 +10,6 @@ It allows you to perform with PC such operations as:
 6. Log out from OpenBox session
 
 In self work it interacts with D-Bus through `dbus` Python module.
+
+Example:
+![example the window of openboxwm](openboxpm_s.png)
