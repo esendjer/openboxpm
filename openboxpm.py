@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 '''
 ########################################################################################################################
 # Methods of org.freedesktop.login1.Manager (used or planned for use)
@@ -43,12 +44,12 @@ import datetime
 import tkinter as tk
 from functools import partial
 
-dbus_item = 'org.freedesktop.login1'                  # This is D-Bus item name for login1
-dbus_path = '/org/freedesktop/login1'                 # This is D-Bus item path for login1
-dbus_iface = 'org.freedesktop.login1.Manager'         # This is D-Bus item for interface Manager
-dbus_iface_prop = 'org.freedesktop.DBus.Properties'   # This is D-Bus item for get properties
-dbus_ses_path = '/org/freedesktop/login1/session/self' # This is D-Bus item path for Session
-dbus_ses_item = 'org.freedesktop.login1.Session'      # This is D-Bus item name for Session
+dbus_item = 'org.freedesktop.login1'                    # This is D-Bus item name for login1
+dbus_path = '/org/freedesktop/login1'                   # This is D-Bus item path for login1
+dbus_iface = 'org.freedesktop.login1.Manager'           # This is D-Bus item for interface Manager
+dbus_iface_prop = 'org.freedesktop.DBus.Properties'     # This is D-Bus item for get properties
+dbus_ses_path = '/org/freedesktop/login1/session/self'  # This is D-Bus item path for Session
+dbus_ses_item = 'org.freedesktop.login1.Session'        # This is D-Bus item name for Session
 
 sysbus = dbus.SystemBus()                     # Create SystemBus object
 pm = sysbus.get_object(dbus_item, dbus_path)  # Create object for login1
@@ -90,19 +91,41 @@ def get_state(oper_name):
         return 'disabled'
 
 
+def cmd(name: object, act: str):
+    if act == 'Off':
+        pm_iface.PowerOff(True)
+    elif act == 'Reb':
+        pm_iface.Reboot(True)
+    elif act == 'Sus':
+        pm_iface.Suspend(True)
+    elif act == 'Hid':
+        pm_iface.Hibernate(True)
+    elif act == 'Hsl':
+        pm_iface.HybridSleep(True)
+    elif act == 'Out':
+        # pm_ses_iface.Terminate()                  # And it version is working
+        pm_iface.TerminateSession(str(id_seesion))  # And it version is working
+    else:
+        print('Wath?')
+    name.destroy()
+
+
 def main():
     wh = 400
 
     tk_root = tk.Tk()
     tk_root.title('OpenBox PM')
-    tk_root.attributes('-zoomed', True)
-    tk_root.update_idletasks()
-    ws = (tk_root.winfo_width() // 2) - 200
-    hs = (tk_root.winfo_height() // 2) - 200
-    tk_root.geometry('{}x{}+{}+{}'.format(wh, wh, ws, hs))
-    tk_root.attributes('-zoomed', False)
-    tk_root.resizable(width=False, height=False)
-    tk_root.update_idletasks()
+
+    tk_root.attributes('-zoomed', True)  # Maximizing the window for detecting resolution of currently active monitor
+    tk_root.update_idletasks()           # Updating parameters
+
+    ws = (tk_root.winfo_width() // 2) - 200 + tk_root.winfo_rootx()   # Calculating position the window along the X axis
+    hs = (tk_root.winfo_height() // 2) - 200 + tk_root.winfo_rooty()  # Calculating position the window along the Y axis
+
+    tk_root.geometry('{}x{}+{}+{}'.format(wh, wh, ws, hs))  # Applying new geometry foe the window
+    tk_root.attributes('-zoomed', False)                    # Restoring size the window with new geometry
+    tk_root.resizable(width=False, height=False)            # Disabling changes size of the window
+    tk_root.update_idletasks()                              # Updating parameters
 
     tk_window = tk.Frame(tk_root)
     tk_window.pack()
@@ -112,25 +135,25 @@ def main():
     btn_quit = tk.Button(
         tk_window, height='2', width='5', text="QUIT", fg="red", command=tk_root.destroy, state='active'
     )
+    btn_quit.focus_set()
     btn_quit.pack(side=tk.BOTTOM)
 
-    btn_ses = nbtn(text='Log Out', command=lambda: pm_ses_iface.Terminate())
+    btn_ses = nbtn(text='Log Out', command=lambda: cmd(tk_root, 'Out'))
     btn_ses.pack(side=tk.BOTTOM)
-    # pm_iface.TerminateSession(str(id_seesion)) # And it version is wirking
 
-    btn_off = nbtn(text='PowerOff', command=lambda: pm_iface.PowerOff(True), state=get_state('PowerOff'))
+    btn_off = nbtn(text='PowerOff', command=lambda: cmd(tk_root, 'Off'), state=get_state('PowerOff'))
     btn_off.pack(side=tk.BOTTOM)
 
-    btn_reb = nbtn(text='Reboot', command=lambda: pm_iface.Reboot(True), state=get_state('Reboot'))
+    btn_reb = nbtn(text='Reboot', command=lambda: cmd(tk_root, 'Reb'), state=get_state('Reboot'))
     btn_reb.pack(side=tk.BOTTOM)
 
-    btn_sus = nbtn(text='Suspend', command=lambda: pm_iface.Suspend(True), state=get_state('Suspend'))
+    btn_sus = nbtn(text='Suspend', command=lambda: cmd(tk_root, 'Sus'), state=get_state('Suspend'))
     btn_sus.pack(side=tk.BOTTOM)
 
-    btn_hib = nbtn(text='Hibernate', command=lambda: pm_iface.Hibernate(True), state=get_state('Hibernate'))
+    btn_hib = nbtn(text='Hibernate', command=lambda: cmd(tk_root, 'Hib'), state=get_state('Hibernate'))
     btn_hib.pack(side=tk.BOTTOM)
 
-    btn_hsl =  nbtn(text='HybridSleep', command=lambda: pm_iface.HybridSleep(True),state=get_state('HybridSleep'))
+    btn_hsl =  nbtn(text='HybridSleep', command=lambda: cmd(tk_root, 'Hsl'),state=get_state('HybridSleep'))
     btn_hsl.pack(side=tk.BOTTOM)
 
     label = tk.Label(tk_window, height='2', text=sched_sd)
